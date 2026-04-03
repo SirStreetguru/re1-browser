@@ -1,0 +1,37 @@
+FROM --platform=i386 i386/debian:buster
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install Wine and dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wine \
+    wine32 \
+    xvfb \
+    x11-utils \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create user and game directory
+RUN useradd -m user || true
+RUN mkdir -p /home/user/BiohazardPC
+
+# Copy game files
+COPY game/ /home/user/BiohazardPC/
+
+# Set up Wine prefix (pre-initialize to avoid first-run delays)
+RUN su -c "WINEPREFIX=/home/user/.wine WINEARCH=win32 wineboot --init" user 2>/dev/null || true
+
+# Create a launch script
+RUN echo '#!/bin/bash' > /home/user/launch.sh && \
+    echo 'cd /home/user/BiohazardPC' >> /home/user/launch.sh && \
+    echo 'export WINEPREFIX=/home/user/.wine' >> /home/user/launch.sh && \
+    echo 'export WINEARCH=win32' >> /home/user/launch.sh && \
+    echo 'wine Biohazard.exe' >> /home/user/launch.sh && \
+    chmod +x /home/user/launch.sh
+
+WORKDIR /home/user/
+
+ENV HOME="/home/user" TERM="xterm" USER="user" SHELL="/bin/bash" EDITOR="vim" LANG="en_US.UTF-8" LC_ALL="C"
+RUN echo 'root:password' | chpasswd
+
+CMD [ "/bin/bash" ]

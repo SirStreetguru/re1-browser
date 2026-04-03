@@ -1,4 +1,3 @@
-/node_modules
-/.svelte-kit
-pnpm-lock.yaml
-build/
+# Don't commit the game data (it goes into the Docker build only)
+# Uncomment the next line if you want to keep game files out of git history
+# game/
