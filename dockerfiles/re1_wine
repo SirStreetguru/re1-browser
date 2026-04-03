@@ -1,4 +1,4 @@
-FROM --platform=i386 i386/debian:buster
+FROM i386/debian:bullseye
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -6,8 +6,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wine \
     wine32 \
-    xvfb \
-    x11-utils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -18,15 +16,11 @@ RUN mkdir -p /home/user/BiohazardPC
 # Copy game files
 COPY game/ /home/user/BiohazardPC/
 
-# Set up Wine prefix (pre-initialize to avoid first-run delays)
+# Set up Wine prefix
 RUN su -c "WINEPREFIX=/home/user/.wine WINEARCH=win32 wineboot --init" user 2>/dev/null || true
 
 # Create a launch script
-RUN echo '#!/bin/bash' > /home/user/launch.sh && \
-    echo 'cd /home/user/BiohazardPC' >> /home/user/launch.sh && \
-    echo 'export WINEPREFIX=/home/user/.wine' >> /home/user/launch.sh && \
-    echo 'export WINEARCH=win32' >> /home/user/launch.sh && \
-    echo 'wine Biohazard.exe' >> /home/user/launch.sh && \
+RUN printf '#!/bin/bash\ncd /home/user/BiohazardPC\nexport WINEPREFIX=/home/user/.wine\nexport WINEARCH=win32\nwine Biohazard.exe\n' > /home/user/launch.sh && \
     chmod +x /home/user/launch.sh
 
 WORKDIR /home/user/
